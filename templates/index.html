@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Regression Analyzer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <style>
+    body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+    .hero { background: linear-gradient(135deg, #1a73e8 0%, #6c3de0 100%);
+            color: #fff; padding: 3.5rem 1rem 2.5rem; text-align: center; }
+    .hero h1 { font-size: 2.4rem; font-weight: 700; }
+    .hero p  { font-size: 1.1rem; opacity: .88; }
+    .card   { border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+    .upload-area { border: 2.5px dashed #1a73e8; border-radius: 12px;
+                   padding: 2.2rem; text-align: center; cursor: pointer;
+                   transition: background .2s; }
+    .upload-area:hover { background: #e8f0fe; }
+    .upload-area input[type=file] { display: none; }
+    .upload-icon { font-size: 3rem; }
+    .steps .step { display: flex; align-items: flex-start; gap: .9rem; margin-bottom: 1.2rem; }
+    .steps .num  { background: #1a73e8; color: #fff; border-radius: 50%;
+                   width: 32px; height: 32px; display: flex; align-items: center;
+                   justify-content: center; font-weight: 700; flex-shrink: 0; }
+    .btn-primary { background: #1a73e8; border: none; }
+    .btn-primary:hover { background: #1558c0; }
+    #file-name { font-size: .9rem; color: #555; margin-top: .5rem; }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Regression Analyzer</h1>
+  <p>Upload a CSV, pick your columns, and explore regression results in seconds.</p>
+</div>
+
+<div class="container py-5">
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in msgs %}
+      <div class="alert alert-{{ cat }} alert-dismissible fade show" role="alert">
+        {{ msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <div class="row g-4 justify-content-center">
+
+    <!-- Upload card -->
+    <div class="col-lg-6">
+      <div class="card p-4">
+        <h4 class="mb-3 fw-bold">Upload your CSV</h4>
+        <form method="POST" enctype="multipart/form-data" id="upload-form">
+          <div class="upload-area" id="drop-zone" onclick="document.getElementById('csv_file').click()">
+            <div class="upload-icon">📂</div>
+            <p class="mb-1 fw-semibold">Click to browse or drag &amp; drop</p>
+            <p class="text-muted small">Max 10 MB &nbsp;·&nbsp; .csv files only</p>
+            <input type="file" name="csv_file" id="csv_file" accept=".csv" required
+                   onchange="showFileName(this)">
+          </div>
+          <div id="file-name" class="text-center"></div>
+          <button type="submit" class="btn btn-primary w-100 mt-3 py-2 fw-semibold">
+            Upload &amp; Continue →
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="col-lg-5">
+      <div class="card p-4 h-100">
+        <h5 class="fw-bold mb-3">How it works</h5>
+        <div class="steps">
+          <div class="step"><div class="num">1</div><div><strong>Upload</strong> any numeric CSV dataset.</div></div>
+          <div class="step"><div class="num">2</div><div><strong>Choose</strong> predictor column(s) and the target variable.</div></div>
+          <div class="step"><div class="num">3</div><div><strong>Configure</strong> polynomial degree and train/test split.</div></div>
+          <div class="step"><div class="num">4</div><div><strong>Analyze</strong> R², RMSE, coefficients, and four diagnostic charts.</div></div>
+        </div>
+        <hr>
+        <p class="text-muted small mb-0">
+          Supports simple &amp; multiple linear regression, and polynomial regression
+          (single predictor). Rows with missing values are dropped automatically.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function showFileName(input) {
+    document.getElementById('file-name').textContent =
+      input.files[0] ? '📄 ' + input.files[0].name : '';
+  }
+
+  // Drag-and-drop
+  const zone = document.getElementById('drop-zone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.background = '#e8f0fe'; });
+  zone.addEventListener('dragleave', () => { zone.style.background = ''; });
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.style.background = '';
+    const dt = new DataTransfer();
+    dt.items.add(e.dataTransfer.files[0]);
+    const input = document.getElementById('csv_file');
+    input.files = dt.files;
+    showFileName(input);
+  });
+</script>
+</body>
+</html>

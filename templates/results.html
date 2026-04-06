@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Results · Regression Analyzer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <style>
+    body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+    .topbar { background: linear-gradient(135deg, #1a73e8 0%, #6c3de0 100%);
+              color: #fff; padding: 1.2rem 2rem; display: flex;
+              align-items: center; justify-content: space-between; }
+    .topbar h1 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+    .card { border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+    .metric-card { text-align: center; padding: 1.2rem .8rem; border-radius: 14px; }
+    .metric-card .val { font-size: 2rem; font-weight: 800; line-height: 1.1; }
+    .metric-card .lbl { font-size: .78rem; text-transform: uppercase;
+                        letter-spacing: .07em; opacity: .75; margin-top: .25rem; }
+    .bg-blue  { background: #e8f0fe; color: #1a73e8; }
+    .bg-green { background: #e6f4ea; color: #137333; }
+    .bg-amber { background: #fef3e2; color: #b45309; }
+    .bg-purple{ background: #f3e8fd; color: #6c3de0; }
+    .coef-table th { font-size: .82rem; }
+    .coef-table td { font-size: .85rem; font-family: monospace; }
+    .plot-img { width: 100%; border-radius: 10px; border: 1px solid #e0e0e0; }
+    .equation-box { background: #1e1e2e; color: #cdd6f4; border-radius: 10px;
+                    padding: 1rem 1.3rem; font-family: monospace; font-size: .92rem;
+                    overflow-x: auto; white-space: nowrap; }
+    .badge-info-custom { background: #e8f0fe; color: #1a73e8; padding: .3rem .7rem;
+                         border-radius: 20px; font-size: .8rem; }
+    .section-title { font-size: 1rem; font-weight: 700; color: #333; margin-bottom: .8rem; }
+    .r2-bar-wrap { height: 10px; background: #e0e0e0; border-radius: 99px; overflow: hidden; }
+    .r2-bar { height: 100%; background: linear-gradient(90deg,#1a73e8,#6c3de0);
+              border-radius: 99px; transition: width .6s ease; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>📊 Regression Results</h1>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('configure') }}" class="btn btn-sm btn-light">← Reconfigure</a>
+    <a href="{{ url_for('reset') }}" class="btn btn-sm btn-outline-light">New File</a>
+  </div>
+</div>
+
+<div class="container py-4">
+
+  <!-- Model summary badges -->
+  <div class="d-flex flex-wrap gap-2 mb-4">
+    <span class="badge-info-custom">
+      Y: <strong>{{ result.y_col }}</strong>
+    </span>
+    <span class="badge-info-custom">
+      X: <strong>{{ result.x_cols | join(', ') }}</strong>
+    </span>
+    <span class="badge-info-custom">
+      Degree: <strong>{{ result.degree }}</strong>
+    </span>
+    <span class="badge-info-custom">
+      Rows used: <strong>{{ result.n_rows }}</strong>
+      (train {{ result.n_train }} / test {{ result.n_test }})
+    </span>
+  </div>
+
+  <!-- Metric cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="metric-card bg-blue">
+        <div class="val">{{ result.r2_train }}</div>
+        <div class="lbl">R² Train</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="metric-card bg-green">
+        <div class="val">{{ result.r2_test }}</div>
+        <div class="lbl">R² Test</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="metric-card bg-amber">
+        <div class="val">{{ result.rmse_train }}</div>
+        <div class="lbl">RMSE Train</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="metric-card bg-purple">
+        <div class="val">{{ result.rmse_test }}</div>
+        <div class="lbl">RMSE Test</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- R² visual bars -->
+  <div class="card p-4 mb-4">
+    <div class="section-title">R² Score Breakdown</div>
+    <div class="mb-2">
+      <div class="d-flex justify-content-between small mb-1">
+        <span>Train R²</span><span class="fw-bold text-primary">{{ result.r2_train }}</span>
+      </div>
+      <div class="r2-bar-wrap">
+        <div class="r2-bar" style="width: {{ [result.r2_train * 100, 0] | max }}%"></div>
+      </div>
+    </div>
+    <div>
+      <div class="d-flex justify-content-between small mb-1">
+        <span>Test R²</span><span class="fw-bold text-success">{{ result.r2_test }}</span>
+      </div>
+      <div class="r2-bar-wrap">
+        <div class="r2-bar" style="width: {{ [result.r2_test * 100, 0] | max }}%; background: linear-gradient(90deg,#137333,#34a853)"></div>
+      </div>
+    </div>
+    <p class="text-muted small mt-2 mb-0">
+      R² measures the proportion of variance explained (1.0 = perfect fit).
+      A large gap between train and test R² suggests overfitting.
+    </p>
+  </div>
+
+  <div class="row g-4 mb-4">
+
+    <!-- Equation -->
+    <div class="col-lg-6">
+      <div class="card p-4 h-100">
+        <div class="section-title">Model Equation</div>
+        <div class="equation-box" id="equation">
+          <span id="eq-text">computing…</span>
+        </div>
+        <hr>
+        <div class="section-title mt-1">Coefficients</div>
+        <div class="table-responsive">
+          <table class="table table-sm coef-table mb-0">
+            <thead class="table-light">
+              <tr><th>Feature</th><th>Coefficient</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>intercept</td><td>{{ result.intercept }}</td></tr>
+              {% for c in result.coefficients %}
+              <tr><td>{{ c.feature }}</td><td>{{ c.coefficient }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interpretation guide -->
+    <div class="col-lg-6">
+      <div class="card p-4 h-100">
+        <div class="section-title">How to Interpret</div>
+        <ul class="small text-muted">
+          <li class="mb-2"><strong>R²</strong> — proportion of variance in Y explained by the model.
+            Values closer to 1 are better.</li>
+          <li class="mb-2"><strong>RMSE</strong> — average prediction error in the same units as Y.
+            Lower is better.</li>
+          <li class="mb-2"><strong>Train vs Test gap</strong> — a large difference indicates
+            overfitting; consider lowering the polynomial degree.</li>
+          <li class="mb-2"><strong>Residuals</strong> — ideally scattered randomly around zero.
+            Patterns suggest the model misses structure in the data.</li>
+          <li><strong>Coefficients</strong> — for degree-1 models, each unit increase in a
+            predictor changes Y by its coefficient (all else equal).</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Plots -->
+  <div class="row g-4">
+
+    {% if result.plots.scatter %}
+    <div class="col-lg-6">
+      <div class="card p-3">
+        <div class="section-title px-1">Scatter Plot &amp; Fit</div>
+        <img src="data:image/png;base64,{{ result.plots.scatter }}" class="plot-img" alt="Scatter">
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="col-lg-6">
+      <div class="card p-3">
+        <div class="section-title px-1">Actual vs Predicted</div>
+        <img src="data:image/png;base64,{{ result.plots.actual_vs_pred }}" class="plot-img" alt="Actual vs Predicted">
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="card p-3">
+        <div class="section-title px-1">Residual Diagnostics</div>
+        <img src="data:image/png;base64,{{ result.plots.residuals }}" class="plot-img" alt="Residuals">
+      </div>
+    </div>
+
+    {% if result.plots.correlation %}
+    <div class="col-lg-6">
+      <div class="card p-3">
+        <div class="section-title px-1">Correlation Matrix</div>
+        <img src="data:image/png;base64,{{ result.plots.correlation }}" class="plot-img" alt="Correlation">
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+</div><!-- /container -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Build equation string client-side from injected JSON
+  const coefs = {{ result.coefficients | tojson }};
+  const intercept = {{ result.intercept }};
+  const yCol = {{ result.y_col | tojson }};
+
+  let eq = yCol + ' = ' + intercept;
+  coefs.forEach(c => {
+    const sign = c.coefficient >= 0 ? ' + ' : ' - ';
+    eq += sign + Math.abs(c.coefficient) + ' × ' + c.feature;
+  });
+  document.getElementById('eq-text').textContent = eq;
+</script>
+</body>
+</html>
