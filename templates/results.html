@@ -6,64 +6,93 @@
   <title>Results · Regression Analyzer</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <style>
-    body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
-    .topbar { background: linear-gradient(135deg, #1a73e8 0%, #6c3de0 100%);
-              color: #fff; padding: 1.2rem 2rem; display: flex;
-              align-items: center; justify-content: space-between; }
-    .topbar h1 { font-size: 1.4rem; font-weight: 700; margin: 0; }
-    .card { border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
-    .metric-card { text-align: center; padding: 1.2rem .8rem; border-radius: 14px; }
-    .metric-card .val { font-size: 2rem; font-weight: 800; line-height: 1.1; }
-    .metric-card .lbl { font-size: .78rem; text-transform: uppercase;
-                        letter-spacing: .07em; opacity: .75; margin-top: .25rem; }
-    .bg-blue  { background: #e8f0fe; color: #1a73e8; }
-    .bg-green { background: #e6f4ea; color: #137333; }
-    .bg-amber { background: #fef3e2; color: #b45309; }
-    .bg-purple{ background: #f3e8fd; color: #6c3de0; }
-    .coef-table th { font-size: .82rem; }
-    .coef-table td { font-size: .85rem; font-family: monospace; }
-    .plot-img { width: 100%; border-radius: 10px; border: 1px solid #e0e0e0; }
-    .equation-box { background: #1e1e2e; color: #cdd6f4; border-radius: 10px;
-                    padding: 1rem 1.3rem; font-family: monospace; font-size: .92rem;
-                    overflow-x: auto; white-space: nowrap; }
-    .badge-info-custom { background: #e8f0fe; color: #1a73e8; padding: .3rem .7rem;
-                         border-radius: 20px; font-size: .8rem; }
-    .section-title { font-size: 1rem; font-weight: 700; color: #333; margin-bottom: .8rem; }
-    .r2-bar-wrap { height: 10px; background: #e0e0e0; border-radius: 99px; overflow: hidden; }
-    .r2-bar { height: 100%; background: linear-gradient(90deg,#1a73e8,#6c3de0);
-              border-radius: 99px; transition: width .6s ease; }
+    body { background:#f0f4f8; font-family:'Segoe UI',sans-serif; }
+    .topbar { background:linear-gradient(135deg,#1a73e8 0%,#6c3de0 100%);
+              color:#fff; padding:1.2rem 2rem;
+              display:flex; align-items:center; justify-content:space-between; }
+    .topbar h1 { font-size:1.4rem; font-weight:700; margin:0; }
+    .card { border:none; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,.08); }
+    .metric-card { text-align:center; padding:1.2rem .8rem; border-radius:14px; }
+    .metric-card .val { font-size:2rem; font-weight:800; line-height:1.1; }
+    .metric-card .lbl { font-size:.78rem; text-transform:uppercase;
+                        letter-spacing:.07em; opacity:.75; margin-top:.25rem; }
+    .bg-blue   { background:#e8f0fe; color:#1a73e8; }
+    .bg-green  { background:#e6f4ea; color:#137333; }
+    .bg-amber  { background:#fef3e2; color:#b45309; }
+    .bg-purple { background:#f3e8fd; color:#6c3de0; }
+    .bg-teal   { background:#e0f7f6; color:#00695c; }
+    .bg-pink   { background:#fce4ec; color:#c2185b; }
+    .coef-table th { font-size:.82rem; }
+    .coef-table td { font-size:.85rem; font-family:monospace; }
+    .plot-img  { width:100%; border-radius:10px; border:1px solid #e0e0e0; }
+    .equation-box { background:#1e1e2e; color:#cdd6f4; border-radius:10px;
+                    padding:1rem 1.3rem; font-family:monospace; font-size:.88rem;
+                    overflow-x:auto; white-space:nowrap; }
+    .badge-info-custom { background:#e8f0fe; color:#1a73e8; padding:.3rem .7rem;
+                         border-radius:20px; font-size:.8rem; }
+    .section-title { font-size:1rem; font-weight:700; color:#333; margin-bottom:.8rem; }
+    .r2-bar-wrap { height:10px; background:#e0e0e0; border-radius:99px; overflow:hidden; }
+    .r2-bar { height:100%; border-radius:99px; transition:width .6s ease; }
+    .btn-export { border-radius:10px; font-weight:600; padding:.5rem 1.2rem; }
+    .report-tbl th { font-size:.8rem; background:#f8f9fa; }
+    .report-tbl td { font-size:.82rem; }
+    .class-good { color:#137333; font-weight:600; }
+    .class-mid  { color:#b45309; font-weight:600; }
+    .class-bad  { color:#c62828; font-weight:600; }
   </style>
 </head>
 <body>
 
 <div class="topbar">
   <h1>📊 Regression Results</h1>
-  <div class="d-flex gap-2">
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{{ url_for('export_csv') }}" class="btn btn-sm btn-light btn-export">
+      ⬇ Export CSV
+    </a>
+    <a href="{{ url_for('export_pdf') }}" class="btn btn-sm btn-warning btn-export">
+      📄 Download PDF
+    </a>
     <a href="{{ url_for('configure') }}" class="btn btn-sm btn-light">← Reconfigure</a>
-    <a href="{{ url_for('reset') }}" class="btn btn-sm btn-outline-light">New File</a>
+    <a href="{{ url_for('reset') }}"    class="btn btn-sm btn-outline-light">New File</a>
   </div>
 </div>
 
 <div class="container py-4">
 
-  <!-- Model summary badges -->
+  <!-- Model badges -->
   <div class="d-flex flex-wrap gap-2 mb-4">
+    <span class="badge-info-custom">Y: <strong>{{ result.y_col }}</strong></span>
+    <span class="badge-info-custom">X: <strong>{{ result.x_cols | join(', ') }}</strong></span>
+    <span class="badge-info-custom">Type: <strong>{{ result.regression_type | capitalize }}</strong></span>
+    {% if result.degree > 1 %}
+    <span class="badge-info-custom">Degree: <strong>{{ result.degree }}</strong></span>
+    {% endif %}
+    {% if result.regression_type in ['ridge','lasso'] %}
+    <span class="badge-info-custom">α: <strong>{{ result.alpha }}</strong></span>
+    {% endif %}
     <span class="badge-info-custom">
-      Y: <strong>{{ result.y_col }}</strong>
-    </span>
-    <span class="badge-info-custom">
-      X: <strong>{{ result.x_cols | join(', ') }}</strong>
-    </span>
-    <span class="badge-info-custom">
-      Degree: <strong>{{ result.degree }}</strong>
-    </span>
-    <span class="badge-info-custom">
-      Rows used: <strong>{{ result.n_rows }}</strong>
+      Rows: <strong>{{ result.n_rows }}</strong>
       (train {{ result.n_train }} / test {{ result.n_test }})
     </span>
   </div>
 
-  <!-- Metric cards -->
+  <!-- ── Metric cards ──────────────────────────────────────────────────── -->
+  {% if result.is_logistic %}
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="metric-card bg-blue">
+        <div class="val">{{ result.accuracy_train }}</div>
+        <div class="lbl">Accuracy Train</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="metric-card bg-green">
+        <div class="val">{{ result.accuracy_test }}</div>
+        <div class="lbl">Accuracy Test</div>
+      </div>
+    </div>
+  </div>
+  {% else %}
   <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
       <div class="metric-card bg-blue">
@@ -91,7 +120,7 @@
     </div>
   </div>
 
-  <!-- R² visual bars -->
+  <!-- R² bars -->
   <div class="card p-4 mb-4">
     <div class="section-title">R² Score Breakdown</div>
     <div class="mb-2">
@@ -99,7 +128,8 @@
         <span>Train R²</span><span class="fw-bold text-primary">{{ result.r2_train }}</span>
       </div>
       <div class="r2-bar-wrap">
-        <div class="r2-bar" style="width: {{ [result.r2_train * 100, 0] | max }}%"></div>
+        <div class="r2-bar" style="width:{{ [result.r2_train*100,0]|max }}%;
+             background:linear-gradient(90deg,#1a73e8,#6c3de0)"></div>
       </div>
     </div>
     <div>
@@ -107,29 +137,70 @@
         <span>Test R²</span><span class="fw-bold text-success">{{ result.r2_test }}</span>
       </div>
       <div class="r2-bar-wrap">
-        <div class="r2-bar" style="width: {{ [result.r2_test * 100, 0] | max }}%; background: linear-gradient(90deg,#137333,#34a853)"></div>
+        <div class="r2-bar" style="width:{{ [result.r2_test*100,0]|max }}%;
+             background:linear-gradient(90deg,#137333,#34a853)"></div>
       </div>
     </div>
     <p class="text-muted small mt-2 mb-0">
-      R² measures the proportion of variance explained (1.0 = perfect fit).
-      A large gap between train and test R² suggests overfitting.
+      A large gap between train and test R² suggests overfitting —
+      try lowering the polynomial degree or increasing regularization (α).
     </p>
   </div>
+  {% endif %}
 
+  <!-- ── Classification Report (logistic) ──────────────────────────────── -->
+  {% if result.is_logistic and result.class_report %}
+  <div class="card p-4 mb-4">
+    <div class="section-title">Classification Report (Test Set)</div>
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered report-tbl mb-0">
+        <thead>
+          <tr>
+            <th>Class</th>
+            <th>Precision</th>
+            <th>Recall</th>
+            <th>F1-Score</th>
+            <th>Support</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cls, vals in result.class_report.items() %}
+            {% if cls not in ['accuracy','macro avg','weighted avg'] and vals is mapping %}
+            <tr>
+              <td>{{ cls }}</td>
+              <td>{{ vals.get('precision','—') }}</td>
+              <td>{{ vals.get('recall','—') }}</td>
+              <td>{{ vals.get('f1-score','—') }}</td>
+              <td>{{ vals.get('support','—') }}</td>
+            </tr>
+            {% endif %}
+          {% endfor %}
+          {% if result.class_report.get('macro avg') %}
+          <tr class="table-light fw-semibold">
+            <td>Macro Avg</td>
+            <td>{{ result.class_report['macro avg'].get('precision','—') }}</td>
+            <td>{{ result.class_report['macro avg'].get('recall','—') }}</td>
+            <td>{{ result.class_report['macro avg'].get('f1-score','—') }}</td>
+            <td>{{ result.class_report['macro avg'].get('support','—') }}</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Equation + Coefficients ──────────────────────────────────────── -->
   <div class="row g-4 mb-4">
-
-    <!-- Equation -->
     <div class="col-lg-6">
       <div class="card p-4 h-100">
         <div class="section-title">Model Equation</div>
-        <div class="equation-box" id="equation">
-          <span id="eq-text">computing…</span>
-        </div>
+        <div class="equation-box"><span id="eq-text">computing…</span></div>
         <hr>
         <div class="section-title mt-1">Coefficients</div>
-        <div class="table-responsive">
+        <div class="table-responsive" style="max-height:260px;overflow-y:auto">
           <table class="table table-sm coef-table mb-0">
-            <thead class="table-light">
+            <thead class="table-light sticky-top">
               <tr><th>Feature</th><th>Coefficient</th></tr>
             </thead>
             <tbody>
@@ -143,78 +214,109 @@
       </div>
     </div>
 
-    <!-- Interpretation guide -->
     <div class="col-lg-6">
       <div class="card p-4 h-100">
-        <div class="section-title">How to Interpret</div>
-        <ul class="small text-muted">
-          <li class="mb-2"><strong>R²</strong> — proportion of variance in Y explained by the model.
-            Values closer to 1 are better.</li>
-          <li class="mb-2"><strong>RMSE</strong> — average prediction error in the same units as Y.
-            Lower is better.</li>
-          <li class="mb-2"><strong>Train vs Test gap</strong> — a large difference indicates
-            overfitting; consider lowering the polynomial degree.</li>
-          <li class="mb-2"><strong>Residuals</strong> — ideally scattered randomly around zero.
-            Patterns suggest the model misses structure in the data.</li>
-          <li><strong>Coefficients</strong> — for degree-1 models, each unit increase in a
-            predictor changes Y by its coefficient (all else equal).</li>
+        <div class="section-title">Interpretation Guide</div>
+        <ul class="small text-muted mb-0">
+          {% if result.is_logistic %}
+          <li class="mb-2"><strong>Accuracy</strong> — proportion of correct predictions (0–1, higher is better).</li>
+          <li class="mb-2"><strong>Precision</strong> — of all predicted positives, how many were actually positive.</li>
+          <li class="mb-2"><strong>Recall</strong> — of all actual positives, how many were correctly identified.</li>
+          <li class="mb-2"><strong>F1-Score</strong> — harmonic mean of precision and recall.</li>
+          <li><strong>Confusion Matrix</strong> — rows = actual, columns = predicted.</li>
+          {% else %}
+          <li class="mb-2"><strong>R²</strong> — proportion of variance explained (1.0 = perfect).</li>
+          <li class="mb-2"><strong>RMSE</strong> — average prediction error in Y units (lower = better).</li>
+          <li class="mb-2"><strong>Train vs Test gap</strong> — large gap = overfitting.</li>
+          <li class="mb-2"><strong>Residuals</strong> — should be randomly scattered around zero.</li>
+          <li><strong>Coefficients</strong> — each unit increase in X changes Y by its coefficient.</li>
+          {% endif %}
         </ul>
       </div>
     </div>
-
   </div>
 
-  <!-- Plots -->
+  <!-- ── Plots ────────────────────────────────────────────────────────── -->
   <div class="row g-4">
 
     {% if result.plots.scatter %}
     <div class="col-lg-6">
       <div class="card p-3">
         <div class="section-title px-1">Scatter Plot &amp; Fit</div>
-        <img src="data:image/png;base64,{{ result.plots.scatter }}" class="plot-img" alt="Scatter">
+        <img src="data:image/png;base64,{{ result.plots.scatter }}" class="plot-img">
       </div>
     </div>
     {% endif %}
 
+    {% if result.plots.actual_vs_pred %}
     <div class="col-lg-6">
       <div class="card p-3">
         <div class="section-title px-1">Actual vs Predicted</div>
-        <img src="data:image/png;base64,{{ result.plots.actual_vs_pred }}" class="plot-img" alt="Actual vs Predicted">
+        <img src="data:image/png;base64,{{ result.plots.actual_vs_pred }}" class="plot-img">
       </div>
     </div>
+    {% endif %}
 
+    {% if result.plots.confusion_matrix %}
+    <div class="col-lg-6">
+      <div class="card p-3">
+        <div class="section-title px-1">Confusion Matrix</div>
+        <img src="data:image/png;base64,{{ result.plots.confusion_matrix }}" class="plot-img">
+      </div>
+    </div>
+    {% endif %}
+
+    {% if result.plots.feature_importance %}
+    <div class="col-lg-6">
+      <div class="card p-3">
+        <div class="section-title px-1">Feature Importance</div>
+        <img src="data:image/png;base64,{{ result.plots.feature_importance }}" class="plot-img">
+      </div>
+    </div>
+    {% endif %}
+
+    {% if result.plots.residuals %}
     <div class="col-12">
       <div class="card p-3">
         <div class="section-title px-1">Residual Diagnostics</div>
-        <img src="data:image/png;base64,{{ result.plots.residuals }}" class="plot-img" alt="Residuals">
+        <img src="data:image/png;base64,{{ result.plots.residuals }}" class="plot-img">
       </div>
     </div>
+    {% endif %}
 
     {% if result.plots.correlation %}
     <div class="col-lg-6">
       <div class="card p-3">
         <div class="section-title px-1">Correlation Matrix</div>
-        <img src="data:image/png;base64,{{ result.plots.correlation }}" class="plot-img" alt="Correlation">
+        <img src="data:image/png;base64,{{ result.plots.correlation }}" class="plot-img">
+      </div>
+    </div>
+    {% endif %}
+
+    {% if result.plots.pair_plot %}
+    <div class="col-12">
+      <div class="card p-3">
+        <div class="section-title px-1">Pair Plot</div>
+        <img src="data:image/png;base64,{{ result.plots.pair_plot }}" class="plot-img">
       </div>
     </div>
     {% endif %}
 
   </div>
 
-</div><!-- /container -->
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // Build equation string client-side from injected JSON
-  const coefs = {{ result.coefficients | tojson }};
+  const coefs     = {{ result.coefficients | tojson }};
   const intercept = {{ result.intercept }};
-  const yCol = {{ result.y_col | tojson }};
-
+  const yCol      = {{ result.y_col | tojson }};
   let eq = yCol + ' = ' + intercept;
-  coefs.forEach(c => {
+  coefs.slice(0, 6).forEach(c => {
     const sign = c.coefficient >= 0 ? ' + ' : ' - ';
     eq += sign + Math.abs(c.coefficient) + ' × ' + c.feature;
   });
+  if (coefs.length > 6) eq += ' + …';
   document.getElementById('eq-text').textContent = eq;
 </script>
 </body>
